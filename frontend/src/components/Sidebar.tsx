@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { useDesignStore } from '../store/design'
 import { THEMES } from '../themes/palettes'
+import { sortThemesByMatch } from '../themes/themeMatcher'
 import type { PatternType } from '../types'
 
 const PATTERNS: { value: PatternType; label: string }[] = [
@@ -12,6 +14,17 @@ const PATTERNS: { value: PatternType; label: string }[] = [
 
 export default function Sidebar() {
   const store = useDesignStore()
+
+  const sortedThemes = useMemo(() => {
+    return sortThemesByMatch(THEMES, {
+      pattern: store.pattern,
+      iterations: store.iterations,
+      scale: store.scale,
+      rotation: store.rotation,
+      strokeWidth: store.strokeWidth,
+      opacity: store.opacity,
+    })
+  }, [store.pattern, store.iterations, store.scale, store.rotation, store.strokeWidth, store.opacity])
 
   return (
     <div className="w-72 bg-gray-900 border-l border-gray-700 p-4 overflow-y-auto flex flex-col gap-4">
@@ -32,15 +45,16 @@ export default function Sidebar() {
 
       {/* Theme */}
       <div>
-        <label className="text-xs text-gray-400 block mb-1">颜色主题</label>
+        <label className="text-xs text-gray-400 block mb-1">颜色主题 <span className="text-gray-500">(智能排序)</span></label>
         <div className="grid grid-cols-2 gap-2">
-          {THEMES.map(t => (
+          {sortedThemes.map((t, idx) => (
             <button key={t.id} onClick={() => store.setTheme(t.id)}
-              className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600">
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 ${idx < 2 ? 'ring-1 ring-indigo-500/50' : ''}`}>
               <div className="flex">{t.colors.map((c,i) => (
                 <div key={i} style={{background:c}} className="w-3 h-3 rounded-full" />
               ))}</div>
               <span>{t.name}</span>
+              {idx < 2 && <span className="text-[10px] text-indigo-400 ml-auto">★</span>}
             </button>
           ))}
         </div>
